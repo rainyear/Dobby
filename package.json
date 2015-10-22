@@ -1,0 +1,29 @@
+{
+  "name": "Dobby",
+  "version": "1.0.0",
+  "description": "Command line REPL REST client",
+  "main": "index.js",
+  "scripts": {
+    "test": "./bin/dobby.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/rainyear/Dobby.git"
+  },
+  "keywords": [
+    "RESTful client"
+  ],
+  "author": "rainyear",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/rainyear/Dobby/issues"
+  },
+  "bin": {
+    "dobby": "bin/dobby.js"
+  },
+  "homepage": "https://github.com/rainyear/Dobby",
+  "dependencies": {
+    "colors": "^1.1.2",
+    "request": "^2.65.0"
+  }
+}
