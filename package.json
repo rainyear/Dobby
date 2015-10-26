@@ -24,6 +24,7 @@
   "homepage": "https://github.com/rainyear/Dobby",
   "dependencies": {
     "colors": "^1.1.2",
+    "prettyjson": "^1.1.3",
     "request": "^2.65.0"
   }
 }
