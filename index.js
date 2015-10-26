@@ -3,8 +3,6 @@ var readline   = require('readline');
 var colors     = require('colors');
 var url        = require('url');
 var request    = require('request');
-var http       = require('http');
-var https      = require('https');
 var prettyjson = require('prettyjson');
 
 
@@ -87,24 +85,6 @@ var makeRequest = function (method, params, display) {
   console.log(util.format("\n%s %s\n".info, _G.METHOD.bold, href));
 
   _G.CONNECTING = true;
-
-  // var client = _G.CLIENT();
-  // var req = client({
-  //   hostname: URL.hostname,
-  //   port    : URL.port,
-  //   path    : URL.path,
-  //   method  : _G.METHOD,
-  //   headers : {
-  //     'Content-Type': 'application/json',
-  //     'Accept'      : 'application/json',
-  //     'User-Agent'  : 'dobby-cli/1.0.1',
-  //   }
-  // }, function (resp) {
-  //   // console.log(resp.headers);
-  //   display(resp.headers);
-  // });
-  // req.end();
-
 
   request({
     method : _G.METHOD,
