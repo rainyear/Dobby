@@ -95,24 +95,43 @@ var makeRequest = function (params, display) {
   _G.PORT       = URL.port || 80;
   _G.CONNECTING = true;
 
+  var Items = {PData: {}, PHeader: {}, PFile: {}};
   if (params.length > 1) {
     // Items here
-  }
+    params.splice(1).reduce(function (items, p) {
+      if (p.split(':').length === 2) {
+        items['PHeader'][p.split(':')[0]] = p.split(':')[1];
+      }else if(p.split('=').length === 2){
+        items['PData'][p.split('=')[0]] = p.split('=')[1];
+      }else if(p.split('@').length === 2){
+        items['PFile'][p.split('@')[0]] = p.split('@')[1];
+      };
+      return items;
+    }, Items);
+  };
 
+  var headers = _G.HEADERS;
+  for (var key in Items['PHeader']) {
+    if (Items['PHeader'].hasOwnProperty(key) && !headers.hasOwnProperty(key)) {
+      headers[key] = Items['PHeader'][key];
+    };
+  };
   request({
       method : _G.METHOD,
       uri    : href,
       timeout: _G.TIMEOUT,
-      headers: _G.HEADERS,
+      headers: headers,
+      json: Items['PData'],
     }, function (err, resp, body) {
       _G.CONNECTING = false;
       if (err === null) {
         if (resp.headers['content-type'].indexOf('json') === -1) {
           display(JSON.stringify({
             Message: 'You No JSON'.error,
-            ContentType: util.format('< %s >'.bold, resp.headers['content-type'])}));
+            ContentType: util.format('< %s >'.bold, resp.headers['content-type']),
+            Body: body}));
         }else{
-          display(body);
+          display(JSON.stringify(body));
         };
       }else{
         // if (err.code === 'ETIMEDOUT') {
@@ -165,7 +184,7 @@ var parse = function (line, callback) {
     // URL action
     // console.log('URL action');
     action(_G.METHOD, commands, callback);
-  } else if (commands[0].split('.').length > 1){
+  } else if (commands[0].split('/')[0].split('.').length > 1){
     // Host action
     // console.log('Host action');
     commands[0] = _G.PROTOCOL + '//' + commands[0];
