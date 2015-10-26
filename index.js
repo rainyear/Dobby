@@ -85,7 +85,30 @@ var makeRequest = function (params, display) {
     display();
     return;
   }
-  var URL = url.parse(params[0]);
+  var cmd = params[0];
+
+  if (cmd.substr(0, 4) !== "http") {
+    // URL action
+    // console.log('URL action');
+    // action(_G.METHOD, commands, callback);
+    if (cmd.split('/')[0].split('.').length > 1){
+      // Host action
+      // console.log('Host action');
+      cmd = _G.PROTOCOL + '//' + cmd;
+      // action(_G.METHOD, commands, callback);
+    } else if (cmd.split('/').length > 1) {
+      // Path action
+      // console.log('Path action');
+      cmd = url.resolve(_G.PROTOCOL + '//' + _G.HOST, cmd);
+      // action(_G.METHOD, commands, callback);
+    } else {
+      console.log(util.format('\nError: invalid command `%s`\n'.bold, params.join(' ').error));
+      help();
+      display();
+      return;
+    }
+  }
+  var URL = url.parse(cmd);
   var href= URL.href;
 
   console.log(util.format("\n%s %s\n".info, _G.METHOD.bold, href));
@@ -116,11 +139,13 @@ var makeRequest = function (params, display) {
       headers[key] = Items['PHeader'][key];
     };
   };
+  // console.log(Items['PData']);
   request({
       method : _G.METHOD,
       uri    : href,
       timeout: _G.TIMEOUT,
       headers: headers,
+      // json: JSON.stringify(Items['PData']),
       json: Items['PData'],
     }, function (err, resp, body) {
       _G.CONNECTING = false;
@@ -129,7 +154,7 @@ var makeRequest = function (params, display) {
           display(JSON.stringify({
             Message: 'You No JSON'.error,
             ContentType: util.format('< %s >'.bold, resp.headers['content-type']),
-            Body: body}));
+            }));
         }else{
           display(JSON.stringify(body));
         };
@@ -180,25 +205,9 @@ var parse = function (line, callback) {
     // Cmd action
     // console.log('Command action :' + commands[0]);
     action(commands[0], commands.splice(1), callback);
-  } else if (commands[0].substr(0, 4) === "http") {
-    // URL action
-    // console.log('URL action');
-    action(_G.METHOD, commands, callback);
-  } else if (commands[0].split('/')[0].split('.').length > 1){
-    // Host action
-    // console.log('Host action');
-    commands[0] = _G.PROTOCOL + '//' + commands[0];
-    action(_G.METHOD, commands, callback);
-  } else if (commands[0].split('/').length > 1) {
-    // Path action
-    // console.log('Path action');
-    commands[0] = url.resolve(_G.PROTOCOL + '//' + _G.HOST, commands[0]);
-    action(_G.METHOD, commands, callback);
   } else {
-    console.log(util.format('\nError: invalid command `%s`\n'.bold, line.error));
-    help();
-    callback();
-  }
+    action(_G.METHOD, commands, callback);
+  };
 };
 module.exports = {
   run: function () {
