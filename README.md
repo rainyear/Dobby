@@ -10,4 +10,4 @@ git clone git@github.com:rainyear/Dobby.git
 npm run test
 ```
 
-![screencast](screencast/screencast-1.png)
+![screencast](screencast/screenshot-1.png)
