@@ -4,18 +4,26 @@ var colors     = require('colors');
 var url        = require('url');
 var request    = require('request');
 var prettyjson = require('prettyjson');
-
+_VERSION       = require('./package.json').version;
 
 /*
-:help, :h, ?, h                  help
-:quit, :q, q                   quit
-:clear,:c, c                   clear config
+Usage: [Cmd] [Method] URL [Item [Item]]
 
-GET, get, G, g            GET
-POST, post, P, p          POST
+Commands:
+  :help, :h, ?, h                 help
+  :quit, :q, q                    quit
+  :clear,:c, c                    clear config
 
-http://, https://           set host
-/rest/api/action
+  GET, get, G, g                  GET
+  POST, post, P, p                POST
+
+  http://, https://               set host
+  /rest/api/action                request this path
+
+[Item [Item]]:
+  name:value                      HTTP headers
+  name=value                      URL paramaters
+  field@/dir/file                 From file
 */
 
 colors.setTheme({
@@ -35,17 +43,24 @@ var init = function () {
   return {
     PROTOCOL: 'http:',
     HOST    : 'localhost',
+    PORT    : 80,
     METHOD  : 'POST',
     TIMEOUT : 10 * 1000,
+    HEADERS : {
+      'Accept'      : 'application/json',
+      'Content-Type': 'application/json',
+      'User-Agent'  : 'dobby-cli/' + _VERSION,
+    },
+
     PROMOT  : function () {
       var protocol = this.PROTOCOL === 'http:' ? '' : this.PROTOCOL + '//';
       return util.format("%s %s%s $ ".bold, this.METHOD.info, protocol,this.HOST.red);
     },
-    COMMANDS: [':help', ':h', '?', 'h', ':quit', ':q', 'q', ':clear', ':c', 'c', 'GET', 'G', 'g', 'get', 'POST', 'P', 'p', 'post'],
-    CLIENT  : function () {
-      // return this.METHOD === 'GET' ? request.get : request.post;
-      return this.PROTOCOL === 'http:' ? http.request : https.request;
-    },
+    COMMANDS: [':help', ':h', '?', 'h',
+              ':quit', ':q', 'q',
+              ':clear', ':c', 'c',
+              'GET', 'G', 'g', 'get',
+              'POST', 'P', 'p', 'post'],
     CONNECTING: false,
   };
 }
@@ -58,68 +73,55 @@ var help = function () {
   console.log("  GET , G <URL>            HTTP GET".help);
   console.log("  POST, P <URL>            HTTP POST\n".help);
   console.log("  <URL:HOST/PATH>          Make HTTP request with current METHOD".help);
-  if (_G.HOST.length) {
-    console.log("  /api/action              When METHOD and HOST were set\n".help);
-  }else{
-    console.log("  /api/action              When METHOD and HOST both were set\n".input);
-  }
+  console.log("  /api/action              When METHOD and HOST were set\n".help);
+  console.log("Items:".bold);
+  console.log("  name:value               HTTP headers".help);
+  console.log("  name=value               HTTP headers".help);
+  console.log("  field@dir/file           HTTP headers\n".help);
 };
 
-var makeRequest = function (method, params, display) {
-  _G.METHOD = method;
+var makeRequest = function (params, display) {
   if (!params.length) {
     display();
     return;
   }
   var URL = url.parse(params[0]);
   var href= URL.href;
-  if (URL.protocol === null || URL.host === null) {
-    href = url.resolve(_G.PROTOCOL + '//' + _G.HOST, URL.path);
-    URL  = url.parse(href);
-  }else{
-    _G.PROTOCOL = URL.protocol
-    _G.HOST     = URL.host;
-  };
-
 
   console.log(util.format("\n%s %s\n".info, _G.METHOD.bold, href));
 
+  _G.PROTOCOL   = URL.protocol;
+  _G.HOST       = URL.hostname;
+  _G.PORT       = URL.port || 80;
   _G.CONNECTING = true;
 
+  if (params.length > 1) {
+    // Items here
+  }
+
   request({
-    method : _G.METHOD,
-    uri    : href,
-    timeout: _G.TIMEOUT,
-    headers: {
-      'Accept'      : 'application/json',
-      'Content-Type': 'application/json',
-      'User-Agent'  : 'dobby-cli/1.0.0',
-    },
-  }, function (err, resp, body) {
-    _G.CONNECTING = false;
-    if (err === null) {
-      if (resp.headers['content-type'].indexOf('json') === -1) {
-        display(JSON.stringify({Content: resp.headers['content-type']}));
+      method : _G.METHOD,
+      uri    : href,
+      timeout: _G.TIMEOUT,
+      headers: _G.HEADERS,
+    }, function (err, resp, body) {
+      _G.CONNECTING = false;
+      if (err === null) {
+        if (resp.headers['content-type'].indexOf('json') === -1) {
+          display(JSON.stringify({
+            Message: 'You No JSON'.error,
+            ContentType: util.format('< %s >'.bold, resp.headers['content-type'])}));
+        }else{
+          display(body);
+        };
       }else{
-        display(body);
+        // if (err.code === 'ETIMEDOUT') {
+        //   display(JSON.stringify({Error: 'Connection TIMEOUT!'.error}));
+        // } else if (err) {
+        display(JSON.stringify({Error: err}));
+        // };
       }
-    }else{
-      if (err.code === 'ETIMEDOUT') {
-        display('Connection TIMEOUT!'.error);
-      } else if (err) {
-        display(err);
-      }
-    }
-    // console.log(err);
-    // console.log(resp);
-    // console.log(body);
-    /*
-  }).on('data', function (data) {
-    console.log(data);
-  }).on('response', function (resp) {
-    console.log(resp);
-    */
-  });
+    });
 };
 var action = function (cmd, params, callback) {
   switch (cmd) {
@@ -131,15 +133,17 @@ var action = function (cmd, params, callback) {
       process.exit(0);
       break;
     case ':clear':case ':c':
-      console.log("Reset configuration!".info);
+      console.log("\nReset configuration!\n".info);
       _G = init();
       callback();
       break;
     case 'GET':case 'G':case 'get':case 'g':
-      makeRequest('GET', params, callback);
+      _G.METHOD = 'GET';
+      makeRequest(params, callback);
       break;
     case 'POST': case 'P':case 'post':case 'p':
-      makeRequest('POST', params, callback);
+      _G.METHOD = 'POST';
+      makeRequest(params, callback);
       break;
   }
 };
@@ -149,14 +153,32 @@ var parse = function (line, callback) {
     return;
   }
   if (!line.length) {
-    callback();
-    return;
-  }
+    return callback();
+  };
+
   var commands = line.split(" ");
   if(_G.COMMANDS.filter(function (cmd) {return cmd == commands[0];}).length){
+    // Cmd action
+    // console.log('Command action :' + commands[0]);
     action(commands[0], commands.splice(1), callback);
+  } else if (commands[0].substr(0, 4) === "http") {
+    // URL action
+    // console.log('URL action');
+    action(_G.METHOD, commands, callback);
+  } else if (commands[0].split('.').length > 1){
+    // Host action
+    // console.log('Host action');
+    commands[0] = _G.PROTOCOL + '//' + commands[0];
+    action(_G.METHOD, commands, callback);
+  } else if (commands[0].split('/').length > 1) {
+    // Path action
+    // console.log('Path action');
+    commands[0] = url.resolve(_G.PROTOCOL + '//' + _G.HOST, commands[0]);
+    action(_G.METHOD, commands, callback);
   } else {
-    makeRequest(_G.METHOD, commands, callback);
+    console.log(util.format('\nError: invalid command `%s`\n'.bold, line.error));
+    help();
+    callback();
   }
 };
 module.exports = {
