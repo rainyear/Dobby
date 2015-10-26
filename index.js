@@ -114,8 +114,8 @@ var makeRequest = function (params, display) {
   console.log(util.format("\n%s %s\n".info, _G.METHOD.bold, href));
 
   _G.PROTOCOL   = URL.protocol;
-  _G.HOST       = URL.hostname;
   _G.PORT       = URL.port || 80;
+  _G.HOST       = URL.hostname + (_G.PORT === 80 ? "" : ":"+_G.PORT);
   _G.CONNECTING = true;
 
   var Items = {PData: {}, PHeader: {}, PFile: {}};
