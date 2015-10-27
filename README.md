@@ -14,6 +14,6 @@ npm run test
 
 #### TODO
 - [ ] Item - file field
-- [ ] prettyjson
+- [x] prettyjson
 - [ ] `it` command
 - [ ] HTTP request info
