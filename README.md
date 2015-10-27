@@ -13,7 +13,7 @@ npm run test
 ![screencast](screencast/screenshot-1.png)
 
 #### TODO
-[ ] Item - file field
-[ ] prettyjson
-[ ] `it` command
-[ ] HTTP request info
+- [ ] Item - file field
+- [ ] prettyjson
+- [ ] `it` command
+- [ ] HTTP request info
