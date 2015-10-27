@@ -1,10 +1,11 @@
-var util       = require('util');
-var readline   = require('readline');
-var colors     = require('colors');
-var url        = require('url');
-var request    = require('request');
-var prettyjson = require('prettyjson');
-_VERSION       = require('./package.json').version;
+var util     = require('util');
+var readline = require('readline');
+var colors   = require('colors');
+var url      = require('url');
+var request  = require('request');
+// var prettyjson = require('prettyjson');
+var pretty   = require('./lib/pretty.js');
+_VERSION     = require('./package.json').version;
 
 /*
 Usage: [Cmd] [Method] URL [Item [Item]]
@@ -224,7 +225,7 @@ module.exports = {
       parse(line.trim(), function (data) {
         if (data !== undefined) {
           // term.write(data);
-          console.log(prettyjson.render(JSON.parse(data)));
+          console.log(pretty.render(JSON.parse(data)));
           console.log('');
         }
         term.setPrompt(_G.PROMOT());
