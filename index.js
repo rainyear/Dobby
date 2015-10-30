@@ -15,6 +15,7 @@ Commands:
   :help, :h, ?, h                 help
   :quit, :q, q                    quit
   :clear,:c, c                    clear config
+  it                              iterate printing results
 
   GET, get, G, g                  GET
   POST, post, P, p                POST
@@ -61,9 +62,11 @@ var init = function () {
     COMMANDS: [':help', ':h', '?', 'h',
               ':quit', ':q', 'q',
               ':clear', ':c', 'c',
+              'it',
               'GET', 'G', 'g', 'get',
               'POST', 'P', 'p', 'post'],
     CONNECTING: false,
+    OUTPUT: "",
   };
 }
 var help = function () {
@@ -71,7 +74,8 @@ var help = function () {
   console.log("Commands:".bold);
   console.log("  :help , :h, :?           Show help info".help);
   console.log("  :quit , :q               Quit".help);
-  console.log("  :clear, :c               Clear config\n".help);
+  console.log("  :clear, :c               Clear config".help);
+  console.log("  it                       iterate printing results\n".help);
   console.log("  GET , G <URL>            HTTP GET".help);
   console.log("  POST, P <URL>            HTTP POST\n".help);
   console.log("  <URL:HOST/PATH>          Make HTTP request with current METHOD".help);
@@ -192,6 +196,14 @@ var action = function (cmd, params, callback) {
       _G.METHOD = 'POST';
       makeRequest(params, callback);
       break;
+    case 'it':
+      if (_G.OUTPUT.length) {
+        callback(_G.OUTPUT);
+      } else {
+        console.log("\nThere're no results to iterate!\n".error);
+        callback();
+      }
+      break;
   }
 };
 
@@ -212,6 +224,16 @@ var parse = function (line, callback) {
     action(_G.METHOD, commands, callback);
   };
 };
+var getVisableLines = function () {
+  return windowsize.height - 2;
+};
+var printLines = function (str, n) {
+  var lines = str.split('\n');
+  n = n >= lines ? lines - 1 : n;
+
+  console.log(lines.slice(0,n).join('\n'));
+  return lines.slice(n).join('\n');
+};
 module.exports = {
   run: function () {
     _G = init();
@@ -224,11 +246,19 @@ module.exports = {
     term.prompt();
 
     term.on('line', function(line) {
+      console.log(getVisableLines());
       parse(line.trim(), function (data) {
         if (data !== undefined) {
-          // term.write(data);
-          console.log(pretty.render(JSON.parse(data)));
-          console.log('');
+          if (_G.OUTPUT.length) {
+            _G.OUTPUT = printLines(data, getVisableLines());
+          }else {
+            _G.OUTPUT = printLines(pretty.render(JSON.parse(data)), getVisableLines());
+          }
+          if (_G.OUTPUT.length) {
+            console.log('Enter `it` to show more results.'.info);
+          } else {
+            console.log('');
+          }
         }
         term.setPrompt(_G.PROMOT());
         term.prompt();
