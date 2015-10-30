@@ -1,5 +1,5 @@
 {
-  "name": "Dobby",
+  "name": "dobby",
   "version": "1.0.0",
   "description": "Command line REPL REST client",
   "main": "index.js",
