@@ -2,27 +2,19 @@
   "posts": [
     {
       "id": 1,
-      "title": "github",
-      "author": "wee"
+      "name": "rainy"
     },
     {
       "id": 2,
-      "title": "dobby",
-      "author": "rainy"
+      "name": "dobby"
     },
     {
       "id": 3,
-      "title": "node"
-    }
-  ],
-  "comments": [
+      "name": "npm"
+    },
     {
-      "id": 1,
-      "body": "some comment",
-      "postId": 1
+      "id": 4,
+      "name": "pypi"
     }
-  ],
-  "profile": {
-    "name": "typicode"
-  }
+  ]
 }
